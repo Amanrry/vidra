@@ -1,0 +1,39 @@
+app:
+  name: Vidra
+  environment: development
+
+paths:
+  data_dir: data
+  input_dir: data/input
+  runs_dir: data/runs
+  chroma_dir: data/chroma
+  database_path: data/vidra.sqlite3
+
+video:
+  frame_interval_seconds: 2.0
+  max_frames_per_video: 180
+  max_upload_mb: 512
+
+models:
+  yolo_model: yolov8n.pt
+  caption_model: Salesforce/blip-image-captioning-base
+  siglip_model: google/siglip-base-patch16-224
+  whisper_model: base
+  device: auto
+
+retrieval:
+  top_k_text: 6
+  top_k_images: 6
+  min_similarity: 0.0
+
+alignment:
+  same_class_threshold: 0.70
+  different_class_threshold: 0.30
+
+llm:
+  base_url: http://localhost:8000/v1
+  model: qwen2.5
+  api_key: null
+  timeout_seconds: 120.0
+  max_tokens: 1024
+  temperature: 0.1

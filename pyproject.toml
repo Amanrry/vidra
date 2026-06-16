@@ -1,0 +1,49 @@
+[build-system]
+requires = ["setuptools>=69.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "vidra"
+version = "0.1.0"
+description = "Open-domain multimodal video QA with detection, retrieval, and OpenAI-compatible LLM answers."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "pydantic>=2.5.0",
+  "pydantic-settings>=2.2.0",
+  "PyYAML>=6.0.0",
+]
+
+[project.optional-dependencies]
+ai = [
+  "gradio>=4.0.0",
+  "opencv-python>=4.8.0",
+  "pillow>=10.0.0",
+  "ultralytics>=8.0.0",
+  "torch>=2.1.0",
+  "transformers>=4.35.0",
+  "chromadb>=0.4.0",
+  "openai-whisper>=20231117",
+]
+dev = [
+  "pytest>=8.0.0",
+  "ruff>=0.5.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+pythonpath = ["src"]
+addopts = "-q"
+norecursedirs = ["data", ".venv", "venv"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+exclude = ["data", ".venv", "venv"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
