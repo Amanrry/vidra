@@ -74,3 +74,6 @@ checkpoints/
 
 # Notebooks
 .ipynb_checkpoints/
+yolov8n.pt
+scripts/
+.models/

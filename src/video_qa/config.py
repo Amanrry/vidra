@@ -54,21 +54,6 @@ class RetrievalSettings(BaseModel):
     min_similarity: float = Field(default=0.0, ge=0.0, le=1.0)
 
 
-class AlignmentSettings(BaseModel):
-    same_class_threshold: float = Field(default=0.70, ge=0.0, le=1.0)
-    different_class_threshold: float = Field(default=0.30, ge=0.0, le=1.0)
-
-    @field_validator("different_class_threshold")
-    @classmethod
-    def different_threshold_not_above_same(
-        cls, value: float, info: Any
-    ) -> float:
-        same = info.data.get("same_class_threshold")
-        if same is not None and value > same:
-            raise ValueError("different_class_threshold must be <= same_class_threshold")
-        return value
-
-
 class LLMSettings(BaseModel):
     base_url: str = "http://localhost:8000/v1"
     model: str = "qwen2.5"
@@ -100,7 +85,6 @@ class Settings(BaseSettings):
     video: VideoSettings = Field(default_factory=VideoSettings)
     models: ModelSettings = Field(default_factory=ModelSettings)
     retrieval: RetrievalSettings = Field(default_factory=RetrievalSettings)
-    alignment: AlignmentSettings = Field(default_factory=AlignmentSettings)
     llm: LLMSettings = Field(default_factory=LLMSettings)
 
     @classmethod

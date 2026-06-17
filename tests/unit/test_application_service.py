@@ -4,12 +4,15 @@ from pathlib import Path
 
 from video_qa.config import Settings
 from video_qa.models.media import ProcessingStatus, RunPaths, VideoRecord
+from video_qa.models.processing import JobStatus, ProcessingStage
 from video_qa.services.application import (
     ApplicationService,
     ChatPort,
     ProcessingPort,
     ProcessingResult,
 )
+from video_qa.services.processing_progress import ProcessingProgressRepository
+from video_qa.services.processing_queue import ProcessingJob, ProcessingQueue
 from video_qa.storage import Database
 
 
@@ -128,6 +131,64 @@ def test_upload_can_start_processing_immediately(tmp_path: Path) -> None:
     assert result.message == "queued"
     assert len(processor.calls) == 1
     assert service.get_processing_status("video-3").status == ProcessingStatus.processing
+
+
+def test_start_processing_enqueues_without_running_pipeline_in_request_path(
+    tmp_path: Path,
+) -> None:
+    settings = Settings(
+        paths={
+            "data_dir": tmp_path / "data",
+            "input_dir": tmp_path / "data" / "input",
+            "runs_dir": tmp_path / "data" / "runs",
+            "chroma_dir": tmp_path / "data" / "chroma",
+            "database_path": tmp_path / "data" / "vidra.sqlite3",
+        }
+    )
+    database = Database(settings.paths.database_path)
+    progress_repository = ProcessingProgressRepository(database)
+    runner_calls: list[str] = []
+
+    async def runner(job: ProcessingJob) -> None:
+        runner_calls.append(job.video_id)
+
+    queue = ProcessingQueue(
+        runner=runner,
+        max_workers=1,
+        progress_repository=progress_repository,
+    )
+    service = ApplicationService(
+        settings,
+        database,
+        processing_queue=queue,
+        progress_repository=progress_repository,
+    )
+    source = write_video(tmp_path / "demo.mp4")
+    upload = service.upload_video(source, video_id="video-queued")
+
+    result = service.start_processing(upload.video.video_id)  # type: ignore[union-attr]
+
+    assert result.ok
+    assert result.status == ProcessingStatus.queued
+    assert result.job_id is not None
+    assert runner_calls == []
+
+    queued = service.get_processing_status("video-queued")
+    assert queued.status == ProcessingStatus.queued
+    assert queued.progress_percent == 0.0
+
+    progress_repository.update_job(
+        result.job_id,
+        status=JobStatus.processing,
+        stage=ProcessingStage.captioning,
+        progress_percent=45.0,
+        message="Captioning frames.",
+    )
+
+    status = service.get_processing_status("video-queued")
+    assert status.status == ProcessingStatus.processing
+    assert status.message == "Captioning frames."
+    assert status.progress_percent == 45.0
 
 
 def test_chat_uses_injected_agent_without_touching_vector_db(tmp_path: Path) -> None:

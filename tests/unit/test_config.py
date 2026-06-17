@@ -55,17 +55,3 @@ llm:
     with pytest.raises(ValidationError, match="HTTP"):
         load_settings(config)
 
-
-def test_alignment_thresholds_are_ordered(tmp_path: Path) -> None:
-    config = tmp_path / "bad_alignment.yaml"
-    config.write_text(
-        """
-alignment:
-  same_class_threshold: 0.4
-  different_class_threshold: 0.8
-""".strip(),
-        encoding="utf-8",
-    )
-
-    with pytest.raises(ValidationError, match="different_class_threshold"):
-        load_settings(config)

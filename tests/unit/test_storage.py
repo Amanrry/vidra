@@ -14,9 +14,11 @@ def test_database_initializes_expected_tables(tmp_path: Path) -> None:
 
     assert {
         "videos",
+        "processing_jobs",
         "memory",
         "video_context",
         "lineage",
+        "processing_idempotency",
         "schema_version",
     }.issubset(database.table_names())
 
